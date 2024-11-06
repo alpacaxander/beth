@@ -9,6 +9,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@elysiajs/html": "^1.1.1",
     "elysia": "^1.1.24"
   }
 }
