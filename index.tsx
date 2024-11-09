@@ -1,5 +1,5 @@
 import { html } from "@elysiajs/html";
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import * as elements from "typed-html";
 
 type Todo = {
@@ -27,7 +27,7 @@ const app = new Elysia()
         <BaseHtml>
             <body 
                 class="flex w-full h-screen justify-center items-center"
-                hx-get="/list"
+                hx-get="/todos"
                 hx-trigger="load"
             >
                 spinner
@@ -35,7 +35,35 @@ const app = new Elysia()
         </BaseHtml>
     ))
     .post("/clicked", () => <div> I was rendered on the server </div>)
-    .get("/list", () => <TodoList todos={db}/>)
+    .get("/todos", () => <TodoList todos={db}/>)
+    .post(
+        "/todo/:id/toggle",
+        ({params}) => {
+            const todo = db.find((todo) => todo.id === params.id)
+            if (todo) {
+                todo.checked = !todo.checked
+                return <Todo {...todo}/>
+            }
+        },
+        {
+            params: t.Object({
+                id: t.Numeric(),
+            })
+        }
+    )
+    .delete(
+        "/todo/:id",
+        ({params}) => {
+            const index = db.findIndex((todo) => todo.id === params.id)
+            db.splice(index, 1)
+            
+        },
+        {
+            params: t.Object({
+                id: t.Numeric(),
+            })
+        }
+    )
     .listen(3000)
 
 console.log(
@@ -45,8 +73,22 @@ console.log(
 const Todo = ({id, name, checked}: Todo) => (
     <div>
         <p>{name}</p>
-        <input type="checkbox" checked={checked}></input>
-        <button class="text-red-500">X</button>
+        <input
+            hx-post={`/todo/${id}/toggle`}
+            hx-target="closest div"
+            hx-swap="outerHTML"
+            type="checkbox"
+            checked={checked}
+        ></input>
+        <button
+            class="text-red-500"
+            hx-delete={`/todo/${id}`}
+            hx-swap="outerHTML"
+            hx-target="closest div"
+        >
+            X
+        </button>
+
     </div>
 )
 
